@@ -1,0 +1,50 @@
+﻿@page "/"
+@using Shared
+
+@inject HttpClient httpClient
+@inject BlazorSpinner.SpinnerService _spinnerService
+
+<div class="row mt-2">
+    <div class="col-md-4 offset-md-4 center">
+        <textarea class="form-control" @bind="ImageDescription"></textarea>
+    </div>
+</div>
+
+<div class="row mt-2">
+    <div class="col-md-4 offset-md-4 center">
+        <input type="button" class="btn btn-primary" value="Generate Image" @onclick="GenerateImage" />
+    </div>
+</div>
+
+@if (ImageSource != null)
+{
+    <div class="row mt-2">
+        <div class="col-md-12 center">
+            <img src="@ImageSource" class="w-100" />
+        </div>
+    </div>
+}
+
+
+@code {
+    private string ImageDescription { get; set; } = string.Empty;
+    private Uri? ImageSource { get; set; }
+
+    private async Task GenerateImage()
+    {
+        _spinnerService.Show();
+        ImageRequest request = new ImageRequest()
+            {
+                ImageDescription = ImageDescription
+            };
+
+        var response = await httpClient.PostAsJsonAsync("api/generate", request);
+        var dataResponse = await response.Content.ReadFromJsonAsync<ImageResponse>();
+
+        if(dataResponse != null)
+        {
+            ImageSource = dataResponse.ImageSource;
+        }
+        _spinnerService.Hide();
+    }
+}
